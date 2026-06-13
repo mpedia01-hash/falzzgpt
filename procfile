@@ -1,0 +1,1 @@
+web: streamlit run falzzgpt_v11.py --server.port=$PORT --server.address=0.0.0.0
