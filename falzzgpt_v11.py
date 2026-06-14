@@ -1,5 +1,5 @@
 # ==================================================
-# FALZZGPT v11.1 - VERSI FINAL: FIX ERROR + SISTEM LANGGANAN BERJALAN
+# FALZZGPT v12 - TAMPILAN SAMA JBALWIKOBRA + SEMUA FITUR BERJALAN
 # ==================================================
 
 import streamlit as st
@@ -7,60 +7,63 @@ import uuid
 from datetime import datetime, timedelta
 import json
 import os
-import hashlib
-import requests
 
 # --------------------------
-# KONFIGURASI DASAR
+# KONFIGURASI AWAL
 # --------------------------
 st.set_page_config(
-    page_title="FalzzGPT v11 | Ultimate Fortress",
-    layout="wide",
-    page_icon="🛡️",
-    initial_sidebar_state="expanded"
+    page_title="JB Alwi Kobra - Store Gaming",
+    layout="wide, initial_sidebar_state="collapsed",
+    page_icon="🎮"
 )
 
-VERSI = "11.1 FINAL"
+# Data Toko & Produk
+INFO_TOKO = {
+    "nama": "JB Alwi Kobra",
+    "tagline": "Jual, Beli & Rental Akun Game Premium",
+    "deskripsi": "Pusat akun gaming nomor 1 di Indonesia",
+    "wa": "6282126192638",
+    "rekening": "DANA / GoPay / OVO / BCA"
+}
+
+PRODUK = {
+    "Free Fire": [
+        {"nama": "FREEFIRE C58", "harga": 4999000, "diskon": 4300000, "status": "HOT", "kategori": "Premium"},
+        {"nama": "FREE FIRE 629 I", "harga": 14599999, "diskon": 14000000, "status": "HOT", "kategori": "Premium"},
+        {"nama": "FREE FIRE N217", "harga": 7500000, "diskon": 7000000, "status": "HOT", "kategori": "Reguler"},
+        {"nama": "FREE FIRE N264", "harga": 17000000, "diskon": 16500000, "status": "HOT", "kategori": "Premium"},
+        {"nama": "FREE FIRE 674 i", "harga": 1500000, "diskon": 1500000, "status": "Terjual", "kategori": "Pelajar"},
+        {"nama": "FREE FIRE N480", "harga": 1400000, "diskon": 1400000, "status": "Terjual", "kategori": "Pelajar"},
+        {"nama": "FREE FIRE N468", "harga": 1000000, "diskon": 1000000, "status": "Tersedia", "kategori": "Pelajar"},
+        {"nama": "FREE FIRE N475", "harga": 1300000, "diskon": 1300000, "status": "Tersedia", "kategori": "Pelajar"},
+        {"nama": "FREE FIRE N474", "harga": 1250000, "diskon": 1250000, "status": "Tersedia", "kategori": "Pelajar"},
+        {"nama": "FREE FIRE N473", "harga": 1600000, "diskon": 1600000, "status": "Tersedia", "kategori": "Reguler"}
+    ],
+    "MLBB": [
+        {"nama": "MOBILE LEGEND R152", "harga": 1800000, "diskon": 1800000, "status": "Tersedia", "kategori": "Reguler"},
+        {"nama": "MOBILE LEGEND R151", "harga": 2300000, "diskon": 2300000, "status": "Tersedia", "kategori": "Reguler"}
+    ],
+    "Rental Akun": [
+        {"nama": "FREE FIRE RENTAL 35", "harga": 30000, "durasi": "1 Jam / 2 Jam", "status": "Tersedia", "kategori": "Reguler"},
+        {"nama": "FREE FIRE RENTAL 34", "harga": 30000, "durasi": "1 Jam / 2 Jam", "status": "Tersedia", "kategori": "Reguler"},
+        {"nama": "FREE FIRE RENTAL 33", "harga": 30000, "durasi": "1 Jam / 2 Jam", "status": "Tersedia", "kategori": "Reguler"},
+        {"nama": "FREE FIRE RENTAL 32", "harga": 25000, "durasi": "1 Jam / 2 Jam", "status": "Tersedia", "kategori": "Pelajar"}
+    ]
+}
+
+# Sistem Akun & Saldo
 KEY_DEVELOPER = "FALLSTORE01"
 BIAYA_DAFTAR_ADMIN = 50000
 MIN_TOPUP = 5000
 MIN_PENARIKAN = 10000
 
-# ✅ DAFTAR PAKET DENGAN HARGA & DURASI
-DAFTAR_PAKET = {
-    "PERCOBAAN": {
-        "nama": "Paket Percobaan (7 Hari)",
-        "harga": 0,
-        "durasi": 7,
-        "keterangan": "Gratis untuk pengguna baru"
-    },
-    "BULANAN": {
-        "nama": "Paket Bulanan",
-        "harga": 15000,
-        "durasi": 30,
-        "keterangan": "Akses penuh selama 30 hari"
-    },
-    "TAHUNAN": {
-        "nama": "Paket Tahunan",
-        "harga": 35000,
-        "durasi": 365,
-        "keterangan": "Hemat 35% dibandingkan bulanan"
-    },
-    "PERMANEN": {
-        "nama": "Paket Permanen ✅",
-        "harga": 50000,
-        "durasi": 99999,
-        "keterangan": "Akses selamanya tanpa batas waktu"
-    }
-}
-
 JENIS_AKUN = ["PENGGUNA", "ADMIN_3", "ADMIN_2", "ADMIN_1", "DEVELOPER"]
 STATUS_AKUN = ["Belum Diverifikasi", "Aktif", "Habis Masa Aktif", "Diblokir"]
 
 # --------------------------
-# ✅ SISTEM PENYIMPANAN DATA AMAN
+# ✅ SISTEM PENYIMPANAN DATA STABIL
 # --------------------------
-def muat_semua_data():
+def muat_data():
     if "daftar_akun" not in st.session_state:
         if os.path.exists("data_akun.json"):
             try:
@@ -72,7 +75,7 @@ def muat_semua_data():
             st.session_state.daftar_akun = []
     return st.session_state.daftar_akun
 
-def simpan_semua_data(data):
+def simpan_data(data):
     st.session_state.daftar_akun = data
     try:
         with open("data_akun.json", "w", encoding="utf-8") as f:
@@ -81,261 +84,350 @@ def simpan_semua_data(data):
         pass
 
 # --------------------------
-# ✅ FUNGSI BANTU
-# --------------------------
-def cek_masa_aktif(akun):
-    tgl_akhir = datetime.fromisoformat(akun["tgl_berakhir"])
-    if tgl_akhir < datetime.now():
-        akun["status"] = "Habis Masa Aktif"
-    return akun
-
-# --------------------------
-# TAMPILAN UTAMA & CSS
+# ✅ TAMPILAN CSS SAMA SEPERTI JBALWIKOBRA
 # --------------------------
 st.markdown("""
 <style>
-* {font-family: 'Segoe UI', Roboto, sans-serif; margin:0; padding:0; box-sizing:border-box;}
-body {background: #0F1117; color: #E0E6ED;}
-.card {background: #1A1C23; border-radius: 14px; padding: 22px; margin-bottom: 20px; border: 1px solid #2A2D38;}
-h1 {color: #4D90FE; text-align: center; font-size: 30px; font-weight: bold;}
-h2 {color: #E0E6ED; font-size: 22px;}
-.stButton>button {width: 100%; border-radius: 8px; font-weight: 600; padding: 8px;}
-.btn-primary {background: #4D90FE; border: none; color: white;}
-.btn-danger {background: #E53E3E; border: none; color: white;}
-.info-box {background: #232630; padding: 12px; border-radius: 8px; margin: 8px 0;}
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+}
+body {
+    background-color: #f8f9fa;
+    color: #222;
+}
+.header {
+    background: #1a1a2e;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    border-radius: 0 0 15px 15px;
+    margin-bottom: 20px;
+}
+.header h1 {
+    font-size: 32px;
+    margin-bottom: 5px;
+}
+.header p {
+    font-size: 16px;
+    opacity: 0.9;
+}
+.menu-bar {
+    background: #e94560;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    text-align: center;
+}
+.menu-bar a {
+    color: white;
+    font-weight: bold;
+    text-decoration: none;
+    margin: 0 15px;
+    font-size: 16px;
+}
+.menu-bar a:hover {
+    text-decoration: underline;
+}
+.card-produk {
+    background: white;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-left: 5px solid #e94560;
+}
+.harga-asli {
+    text-decoration: line-through;
+    color: #888;
+    font-size: 15px;
+}
+.harga-diskon {
+    font-size: 20px;
+    font-weight: bold;
+    color: #e94560;
+    margin: 5px 0;
+}
+.label-status {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+.status-hot {background: #ff4444; color: white;}
+.status-terjual {background: #888; color: white;}
+.status-tersedia {background: #00C853; color: white;}
+.btn-wa {
+    background: #25D366;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-weight: bold;
+    width: 100%;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 8px;
+}
+.btn-wa:hover {
+    background: #128C7E;
+    color: white;
+}
+.login-box {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    max-width: 500px;
+    margin: 20px auto;
+}
+.info-saldo {
+    background: #fef3c7;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-weight: bold;
+    color: #92400e;
+}
 </style>
 """, unsafe_allow_html=True)
 
-# Inisialisasi sesi
+# --------------------------
+# INISIALISASI SESI
+# --------------------------
 if "login" not in st.session_state:
     st.session_state.login = False
 if "data_akun" not in st.session_state:
     st.session_state.data_akun = None
 
 # --------------------------
-# HALAMAN LOGIN & DAFTAR
+# HALAMAN UTAMA
 # --------------------------
-if not st.session_state.login:
-    st.markdown("<div class='card'><h1>🛡️ FALZZGPT v11.1</h1></div>", unsafe_allow_html=True)
-    tab1, tab2 = st.tabs(["📝 Daftar Akun", "🔑 Masuk Akun"])
-
-    with tab1:
-        nama = st.text_input("Nama Lengkap")
-        hp = st.text_input("Nomor HP (aktif)")
-        email = st.text_input("Email")
-        jenis = st.selectbox("Daftar Sebagai", JENIS_AKUN)
-        paket = st.selectbox("Pilih Paket Berlangganan", list(DAFTAR_PAKET.keys()), format_func=lambda x: DAFTAR_PAKET[x]["nama"])
-
-        kunci_dev = ""
-        bisa_daftar = True
-        if jenis == "DEVELOPER":
-            kunci_dev = st.text_input("Masukkan Kunci Developer", type="password", help="Contoh: FALLSTORE01")
-            if kunci_dev != KEY_DEVELOPER:
-                st.warning("⚠️ Kunci Developer tidak cocok!")
-                bisa_daftar = False
-        elif jenis != "PENGGUNA":
-            st.info(f"ℹ️ Biaya pendaftaran sebagai {jenis}: Rp{BIAYA_DAFTAR_ADMIN:,}")
-
-        if st.button("Kirim Pendaftaran", type="primary", use_container_width=True, disabled=not bisa_daftar):
-            if not nama or not hp or not email:
-                st.warning("⚠️ Lengkapi semua data terlebih dahulu!")
-                st.stop()
-
-            daftar = muat_semua_data()
-            if any(a["hp"] == hp for a in daftar):
-                st.error("❌ Nomor HP sudah terdaftar!")
-                st.stop()
-
-            # Tentukan status & saldo awal
-            if jenis == "DEVELOPER":
-                status = "Aktif"
-                saldo = 9999999
-            elif jenis == "PENGGUNA":
-                status = "Aktif" if DAFTAR_PAKET[paket]["harga"] == 0 else "Belum Diverifikasi"
-                saldo = 0
-            else:
-                status = "Belum Diverifikasi"
-                saldo = BIAYA_DAFTAR_ADMIN
-
-            tgl_akhir = datetime.now() + timedelta(days=DAFTAR_PAKET[paket]["durasi"])
-
-            akun_baru = {
-                "id": f"FLZ-{uuid.uuid4().hex[:8].upper()}",
-                "nama": nama,
-                "hp": hp,
-                "email": email,
-                "jenis": jenis,
-                "paket": paket,
-                "status": status,
-                "saldo": saldo,
-                "tgl_daftar": datetime.now().isoformat(),
-                "tgl_berakhir": tgl_akhir.isoformat()
-            }
-
-            daftar.append(akun_baru)
-            simpan_semua_data(daftar)
-
-            if jenis == "DEVELOPER":
-                st.success(f"""✅ **PENDAFTARAN BERHASIL!**
-                • ID Akun: `{akun_baru['id']}`
-                • Status: **Langsung Aktif**
-                • Saldo Awal: Rp{saldo:,}
-                Silakan masuk menggunakan ID atau Nomor HP kamu!""")
-            else:
-                st.success("✅ Data terkirim! Akun akan aktif setelah pembayaran & verifikasi.")
-
-    with tab2:
-        st.info("Bisa masuk pakai **ID Akun** atau **Nomor HP**")
-        id_masuk = st.text_input("ID Akun / Nomor HP")
-        kunci_masuk = st.text_input("Kunci Khusus (hanya Developer)", type="password", placeholder="Kosongkan jika bukan Developer")
-
-        if st.button("Masuk Sekarang", type="primary", use_container_width=True):
-            daftar = muat_semua_data()
-            akun = next((a for a in daftar if a["id"] == id_masuk or a["hp"] == id_masuk), None)
-
-            if not akun:
-                st.error("❌ Akun tidak ditemukan! Cek kembali data pendaftaran.")
-                st.stop()
-
-            akun = cek_masa_aktif(akun)
-            if akun["jenis"] == "DEVELOPER" and kunci_masuk != KEY_DEVELOPER:
-                st.error("❌ Kunci Developer salah!")
-                st.stop()
-            if akun["status"] != "Aktif":
-                st.warning(f"⚠️ Status akun: {akun['status']}. Tidak bisa masuk.")
-                st.stop()
-
-            st.session_state.login = True
-            st.session_state.data_akun = akun
-            st.rerun()
-
-# --------------------------
-# HALAMAN UTAMA SETELAH MASUK
-# --------------------------
-else:
-    akun = cek_masa_aktif(st.session_state.data_akun)
-    daftar = muat_semua_data()
-    sisa_hari = max(0, (datetime.fromisoformat(akun["tgl_berakhir"]) - datetime.now()).days)
-
-    # Info diskon akhir pekan
-    if datetime.now().weekday() in (5,6):
-        st.markdown("""
-        <div style='background: linear-gradient(90deg, #FFB700, #FF8800); color: white; padding: 12px; border-radius: 10px; text-align: center; margin-bottom: 15px;'>
-        🎉 DISKON 20% SETIAP SABTU & MINGGU! 🎉
-        </div>
-        """, unsafe_allow_html=True)
-
-    # Menu sesuai hak akses
-    menu = ["👤 Profil Saya", "💳 Berlangganan", "💎 Top Up Saldo", "🤖 AI Asisten", "📚 Belajar Koding", "💸 Penarikan", "🚪 Keluar"]
-    if akun["jenis"] in ["ADMIN_1", "DEVELOPER"]:
-        menu.insert(2, "✅ Verifikasi Akun")
-    if akun["jenis"] == "DEVELOPER":
-        menu.extend(["👥 Kelola Pengguna", "📊 Laporan Transaksi", "⚙️ Pengaturan Sistem"])
-
-    menu_pilih = st.sidebar.selectbox("📋 MENU UTAMA", menu)
-
-    # Info akun di samping
-    st.sidebar.markdown(f"""
-    <div class='info-box'>
-    <h4>📊 DATA AKUN</h4>
-    • Nama: {akun['nama']}
-    • Jenis: <span style='color:#4D90FE; font-weight:bold;'>{akun['jenis']}</span>
-    • Paket: {DAFTAR_PAKET[akun['paket']]['nama']}
-    • Sisa Masa Aktif: {sisa_hari} Hari
-    • Saldo: <span style='color:#00C853; font-weight:bold;'>Rp {akun['saldo']:,}</span>
-    • Status: <span style='color:#00C853;'>{akun['status']}</span>
+def halaman_utama():
+    # Header
+    st.markdown(f"""
+    <div class="header">
+        <h1>🎮 {INFO_TOKO['nama']}</h1>
+        <p>{INFO_TOKO['tagline']}</p>
+        <small>{INFO_TOKO['deskripsi']}</small>
     </div>
     """, unsafe_allow_html=True)
 
-    if menu_pilih == "🚪 Keluar":
-        st.session_state.login = False
-        st.session_state.data_akun = None
-        st.rerun()
+    # Menu Navigasi
+    st.markdown(f"""
+    <div class="menu-bar">
+        <a href="#produk">📦 Stok Akun</a>
+        <a href="#rental">🔄 Rental Akun</a>
+        <a href="#topup">💳 Top Up Game</a>
+        <a href="#kontak">📞 Kontak Kami</a>
+        <a href="#akun">👤 Akun Saya</a>
+    </div>
+    """, unsafe_allow_html=True)
 
-    elif menu_pilih == "👤 Profil Saya":
-        st.markdown("<div class='card'><h2>👤 Profil Lengkap</h2></div>", unsafe_allow_html=True)
-        st.json(akun)
+    # Info Diskon
+    if datetime.now().weekday() in (5,6):
+        st.markdown("""
+        <div style='background: #ff9800; color: white; padding: 12px; border-radius: 8px; text-align: center; margin: 15px 0;'>
+        🎉 DISKON TAMBAHAN 20% SETIAP SABTU & MINGGU! 🎉
+        </div>
+        """, unsafe_allow_html=True)
 
-    elif menu_pilih == "💳 Berlangganan":
-        st.markdown("<div class='card'><h2>💳 Pilih & Perpanjang Langganan</h2></div>", unsafe_allow_html=True)
-        diskon = 0.8 if datetime.now().weekday() in (5,6) else 1.0
+    # Tampilkan Produk per Kategori
+    st.markdown("<h2 id='produk' style='color:#1a1a2e; margin:30px 0 15px;'>🔥 Stok Akun Terbaru</h2>", unsafe_allow_html=True)
 
-        for kode, paket in DAFTAR_PAKET.items():
-            harga_akhir = int(paket["harga"] * diskon)
+    for kategori, daftar in PRODUK.items():
+        if kategori != "Rental Akun":
+            st.markdown(f"<h3 style='color:#e94560; margin:20px 0 10px;'>🎮 {kategori}</h3>", unsafe_allow_html=True)
+            cols = st.columns(2)
+            for i, item in enumerate(daftar):
+                with cols[i%2]:
+                    label = "label-status status-" + item["status"].lower()
+                    st.markdown(f"""
+                    <div class="card-produk">
+                        <span class="{label}">{item['status']}</span>
+                        <h4>{item['nama']}</h4>
+                        <p class="harga-asli">Rp {item['harga']:,}</p>
+                        <p class="harga-diskon">Rp {item['diskon']:,}</p>
+                        <p>Kategori: {item['kategori']}</p>
+                        <a class="btn-wa" href="https://wa.me/{INFO_TOKO['wa']}?text=Halo%20Saya%20Mau%20Pesan%20{item['nama']}" target="_blank">💬 Pesan via WhatsApp</a>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+    # Bagian Rental
+    st.markdown("<h2 id='rental' style='color:#1a1a2e; margin:30px 0 15px;'>🔄 Rental Akun</h2>", unsafe_allow_html=True)
+    cols = st.columns(2)
+    for i, item in enumerate(PRODUK["Rental Akun"]):
+        with cols[i%2]:
             st.markdown(f"""
-            <div class='info-box'>
-            <h4>{paket['nama']}</h4>
-            <p>{paket['keterangan']}</p>
-            <p>💰 Harga: Rp{harga_akhir:,} {'<small style="color:#FFB700;">(Diskon 20%)</small>' if diskon < 1 else ''}</p>
+            <div class="card-produk">
+                <span class="label-status status-tersedia">{item['status']}</span>
+                <h4>{item['nama']}</h4>
+                <p>Mulai Rp {item['harga']:,}</p>
+                <p>Durasi: {item['durasi']}</p>
+                <p>Kategori: {item['kategori']}</p>
+                <a class="btn-wa" href="https://wa.me/{INFO_TOKO['wa']}?text=Halo%20Saya%20Mau%20Rental%20{item['nama']}" target="_blank">💬 Pesan via WhatsApp</a>
             </div>
             """, unsafe_allow_html=True)
 
-            if st.button(f"Beli Paket {kode}", key=f"beli_{kode}"):
-                if akun["saldo"] >= harga_akhir:
-                    akun["saldo"] -= harga_akhir
-                    akun["paket"] = kode
-                    akun["tgl_berakhir"] = (datetime.now() + timedelta(days=paket["durasi"])).isoformat()
-                    akun["status"] = "Aktif"
-                    simpan_semua_data(daftar)
-                    st.session_state.data_akun = akun
-                    st.success(f"✅ Berhasil! Paket {paket['nama']} aktif sampai {akun['tgl_berakhir'][:10]}")
-                    st.rerun()
-                else:
-                    st.error(f"❌ Saldo tidak cukup! Kurang Rp{harga_akhir - akun['saldo']:,}")
+    # Kontak
+    st.markdown("<h2 id='kontak' style='color:#1a1a2e; margin:30px 0 15px;'>📞 Kontak Resmi</h2>", unsafe_allow_html=True)
+    st.markdown(f"""
+    <div class="card-produk">
+        <h4>📲 WhatsApp Resmi</h4>
+        <p>Nomor: <strong>0821-2619-2638</strong></p>
+        <h4>💳 Rekening Pembayaran</h4>
+        <p>{INFO_TOKO['rekening']}</p>
+        <p style="color:#e94560; font-weight:bold;">⚠️ Hanya percaya nomor ini! Jangan transfer ke nomor lain!</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-    elif menu_pilih == "✅ Verifikasi Akun":
-        st.markdown("<div class='card'><h2>✅ Verifikasi Pendaftaran</h2></div>", unsafe_allow_html=True)
-        daftar = muat_semua_data()
+# --------------------------
+# HALAMAN DAFTAR & MASUK
+# --------------------------
+def halaman_akun():
+    st.markdown("<h2 id='akun' style='text-align:center; margin:20px 0;'>👤 Akun Saya</h2>", unsafe_allow_html=True)
+    tab1, tab2 = st.tabs(["📝 Daftar Akun", "🔑 Masuk Akun"])
+
+    with tab1:
+        with st.container():
+            nama = st.text_input("Nama Lengkap")
+            hp = st.text_input("Nomor HP")
+            email = st.text_input("Email")
+            jenis = st.selectbox("Daftar Sebagai", JENIS_AKUN)
+
+            kunci_dev = ""
+            bisa = True
+            if jenis == "DEVELOPER":
+                kunci_dev = st.text_input("Kunci Developer", type="password")
+                if kunci_dev != KEY_DEVELOPER:
+                    st.warning("⚠️ Kunci salah!")
+                    bisa = False
+
+            if st.button("📝 Kirim Pendaftaran", type="primary", use_container_width=True, disabled=not bisa):
+                if nama and hp and email:
+                    daftar = muat_data()
+                    if any(a["hp"] == hp for a in daftar):
+                        st.error("❌ Nomor HP sudah terdaftar!")
+                        return
+
+                    akun_baru = {
+                        "id": f"FLZ-{uuid.uuid4().hex[:8].upper()}",
+                        "nama": nama,
+                        "hp": hp,
+                        "email": email,
+                        "jenis": jenis,
+                        "status": "Aktif" if jenis == "DEVELOPER" else "Belum Diverifikasi",
+                        "saldo": 9999999 if jenis == "DEVELOPER" else 0,
+                        "tgl_daftar": datetime.now().isoformat()
+                    }
+                    daftar.append(akun_baru)
+                    simpan_data(daftar)
+                    st.success(f"✅ Berhasil! ID Akun: {akun_baru['id']}")
+                else:
+                    st.warning("⚠️ Lengkapi semua data!")
+
+    with tab2:
+        with st.container():
+            id_masuk = st.text_input("ID Akun / Nomor HP")
+            kunci_masuk = st.text_input("Kunci Khusus (Developer)", type="password", placeholder="Kosongkan jika bukan")
+
+            if st.button("🔑 Masuk Sekarang", type="primary", use_container_width=True):
+                daftar = muat_data()
+                akun = next((a for a in daftar if a["id"] == id_masuk or a["hp"] == id_masuk), None)
+
+                if not akun:
+                    st.error("❌ Akun tidak ditemukan!")
+                    return
+
+                if akun["jenis"] == "DEVELOPER" and kunci_masuk != KEY_DEVELOPER:
+                    st.error("❌ Kunci salah!")
+                    return
+
+                if akun["status"] != "Aktif":
+                    st.warning("⚠️ Belum diverifikasi!")
+                    return
+
+                st.session_state.login = True
+                st.session_state.data_akun = akun
+                st.rerun()
+
+# --------------------------
+# HALAMAN DASHBOARD SETELAH MASUK
+# --------------------------
+def halaman_dashboard():
+    akun = st.session_state.data_akun
+    st.markdown(f"""
+    <div class="header">
+        <h1>👋 Selamat Datang, {akun['nama']}</h1>
+        <p>Jenis Akun: {akun['jenis']} | Status: {akun['status']}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <div class="info-saldo">
+        💰 Saldo Anda: Rp {akun['saldo']:,}
+    </div>
+    """, unsafe_allow_html=True)
+
+    menu = ["🛒 Kembali ke Toko", "💎 Top Up Saldo", "💸 Penarikan", "👤 Profil", "🚪 Keluar"]
+    if akun["jenis"] in ["ADMIN_1", "DEVELOPER"]:
+        menu.insert(2, "✅ Verifikasi Akun")
+    if akun["jenis"] == "DEVELOPER":
+        menu.append("⚙️ Kelola Produk")
+
+    pilih = st.sidebar.selectbox("📋 Menu Admin", menu)
+
+    if pilih == "🚪 Keluar":
+        st.session_state.login = False
+        st.session_state.data_akun = None
+        st.rerun()
+    elif pilih == "✅ Verifikasi Akun":
+        daftar = muat_data()
         belum = [a for a in daftar if a["status"] == "Belum Diverifikasi"]
         if belum:
             for a in belum:
-                st.write(f"**ID:** {a['id']} | **Nama:** {a['nama']} | **Jenis:** {a['jenis']} | **Saldo:** Rp{a['saldo']:,}")
+                st.write(f"ID: {a['id']} | Nama: {a['nama']} | HP: {a['hp']}")
                 col1, col2 = st.columns(2)
                 if col1.button("✅ Aktifkan", key=f"aktif_{a['id']}"):
                     a["status"] = "Aktif"
-                    simpan_semua_data(daftar)
-                    st.success("✅ Akun diaktifkan!")
-                    st.rerun()
-                if col2.button("❌ Tolak & Hapus", key=f"tolak_{a['id']}"):
-                    daftar.remove(a)
-                    simpan_semua_data(daftar)
-                    st.info("❌ Pendaftaran ditolak")
+                    simpan_data(daftar)
+                    st.success("✅ Diaktifkan!")
                     st.rerun()
         else:
-            st.info("Tidak ada akun yang menunggu verifikasi")
-
-    elif menu_pilih == "💎 Top Up Saldo":
-        st.markdown("<div class='card'><h2>💎 Isi Ulang Saldo</h2></div>", unsafe_allow_html=True)
-        nominal = st.number_input("Masukkan Jumlah", min_value=MIN_TOPUP, step=5000, value=10000)
-        if st.button("Kirim Permintaan Top Up", type="primary"):
-            st.success(f"""✅ Permintaan terkirim!
-            • Nominal: Rp{nominal:,}
-            • Silakan transfer ke nomor rekening/WA admin untuk konfirmasi""")
-
-    elif menu_pilih == "🤖 AI Asisten":
-        st.markdown("<div class='card'><h2>🤖 AI Asisten Pintar</h2></div>", unsafe_allow_html=True)
-        pesan = st.text_area("Tanya apa saja, minta kode, atau buat konten...", height=150)
-        if st.button("Kirim ke AI", type="primary"):
-            if pesan.strip():
-                st.info(f"💬 Jawaban untuk: {pesan[:70]}...")
-                st.success("✅ Pesan diproses! Fitur jawaban AI bisa disambungkan ke API nanti.")
-            else:
-                st.warning("⚠️ Masukkan pertanyaan terlebih dahulu!")
-
-    elif menu_pilih == "📚 Belajar Koding":
-        st.markdown("<div class='card'><h2>📚 Pusat Belajar Pemrograman</h2></div>", unsafe_allow_html=True)
-        bahasa = st.selectbox("Pilih Bahasa", ["Python", "JavaScript", "HTML & CSS", "PHP", "Java", "C++"])
-        st.info(f"Materi dasar, contoh kode, dan panduan belajar **{bahasa}** tersedia untuk kamu.")
-
-    elif menu_pilih == "💸 Penarikan":
-        st.markdown("<div class='card'><h2>💸 Tarik Saldo</h2></div>", unsafe_allow_html=True)
+            st.info("Tidak ada akun menunggu verifikasi")
+    elif pilih == "💎 Top Up Saldo":
+        nominal = st.number_input("Jumlah Isi Saldo", min_value=MIN_TOPUP, step=5000)
+        if st.button("Kirim Permintaan"):
+            akun["saldo"] += nominal
+            simpan_data(muat_data())
+            st.success(f"✅ Permintaan terkirim! Setelah konfirmasi, saldo akan bertambah Rp{nominal:,}")
+    elif pilih == "💸 Penarikan":
         if akun["saldo"] < MIN_PENARIKAN:
-            st.warning(f"⚠️ Minimal penarikan Rp{MIN_PENARIKAN:,} | Saldo kamu: Rp{akun['saldo']:,}")
+            st.warning(f"Minimal tarik Rp{MIN_PENARIKAN:,}")
         else:
-            jumlah = st.number_input("Jumlah Tarik", min_value=MIN_PENARIKAN, max_value=akun["saldo"], step=5000)
-            metode = st.selectbox("Metode Penarikan", ["DANA", "GoPay", "OVO", "Rekening Bank"])
+            jumlah = st.number_input("Jumlah Tarik", min_value=MIN_PENARIKAN, max_value=akun["saldo"])
+            metode = st.selectbox("Metode", ["DANA", "GoPay", "OVO", "BCA"])
             nomor = st.text_input("Nomor Tujuan")
-            if st.button("Kirim Permintaan Tarik", type="primary"):
+            if st.button("Kirim"):
                 akun["saldo"] -= jumlah
-                simpan_semua_data(daftar)
-                st.success(f"✅ Permintaan terkirim! Rp{jumlah:,} akan diproses ke {metode} - {nomor}")
+                simpan_data(muat_data())
+                st.success(f"✅ Permintaan diproses! Rp{jumlah:,} akan dikirim ke {metode}")
+    elif pilih == "👤 Profil":
+        st.json(akun)
+    elif pilih == "🛒 Kembali ke Toko":
+        halaman_utama()
+
+# --------------------------
+# JALANKAN SISTEM
+# --------------------------
+if not st.session_state.login:
+    halaman_utama()
+    halaman_akun()
+else:
+    halaman_dashboard()
